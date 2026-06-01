@@ -1,58 +1,62 @@
 # srvcs-digitsum
 
-Number theory microservice for srvcs.cloud: the **sum of the decimal digits** of
-an integer.
+## Name
 
-This is a **leaf** service. It depends on no other service and does all of its
-work as local `i64` arithmetic.
+| Field | Value |
+| --- | --- |
+| Service | `srvcs-digitsum` |
+| Slug | `digitsum` |
+| Repository | `srvcs/digitsum` |
+| Package | `srvcs-digitsum` |
+| Kind | `leaf` |
 
-## Concern
+## Function
 
-Given an integer `n`, take its magnitude `|n|` and sum its decimal digits. The
-sign is ignored.
+number theory: sum of decimal digits
 
-```
-digitsum(123)  -> 6     (1 + 2 + 3)
-digitsum(-49)  -> 13    (4 + 9, sign dropped)
-digitsum(0)    -> 0
-```
+## Dependencies
+
+None.
 
 ## API
 
-### `GET /` — identity
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/` | Service identity |
+| `POST` | `/` | Evaluate the service function |
+| `GET` | `/healthz` | Liveness probe |
+| `GET` | `/readyz` | Readiness probe |
+| `GET` | `/metrics` | Prometheus metrics |
+| `GET` | `/openapi.json` | OpenAPI document |
 
-```json
-{
-  "service": "srvcs-digitsum",
-  "concern": "number theory: sum of decimal digits",
-  "depends_on": []
-}
-```
+## Inputs
 
-### `POST /` — evaluate
+| Name | Type | Required |
+| --- | --- | --- |
+| `value` | `json` | yes |
 
-Request:
+## Outputs
 
-```json
-{ "value": 123 }
-```
+| Name | Type |
+| --- | --- |
+| `value` | `json` |
+| `result` | `integer` |
 
-Response `200`:
+## Configuration
 
-```json
-{ "value": 123, "result": 6 }
-```
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SRVCS_BIND_ADDR` | `0.0.0.0:8080` | Bind address |
+| `SRVCS_ENV` | `development` | Environment label for logs |
+| `RUST_LOG` | `info,tower_http=info` | Tracing filter |
 
-| Status | Meaning                              |
-| ------ | ------------------------------------ |
-| `200`  | digit sum computed                   |
-| `422`  | `value` is missing or not an integer |
-| `500`  | internal error                       |
+## Error Behavior
 
-Whole-valued floats (`123.0`) are accepted; genuinely fractional values
-(`12.3`) are rejected with `422`.
+- `422` means the request could not be evaluated for the documented input shape.
+- `503` means a required dependency was unavailable or returned an unexpected response.
+- Dependency validation errors are forwarded when this service delegates validation.
 
-## Local checks
+## Local Checks
 
 ```sh
 cargo fmt --check
@@ -60,12 +64,8 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
-The OpenAPI document is committed at `openapi.json` and checked in CI. Regenerate
-it with:
+See the [srvcs service standard](https://github.com/srvcs/platform/blob/main/STANDARD.md) for the full operational contract.
 
-```sh
-UPDATE_OPENAPI=1 cargo test --test openapi_snapshot
-```
+## Metadata
 
-See [`srvcs/platform`](https://github.com/srvcs/platform) for the shared service
-standard and CI workflow.
+Machine-readable service metadata lives in `srvcs.yaml`. Keep it aligned with this README when the service contract changes.
